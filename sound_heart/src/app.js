@@ -36,19 +36,6 @@ app.use(morgan('dev'));
 app.use(jsonResponse());
 app.use(cookieParser());
 
-// app.use(function (req, res, next) {
-//   res.a = 'value';
-//   res.sum = function (a, b) {
-//     return a + b;
-//   };
-//   next();
-// });
-
-// app.get('/index', function (req, res) {
-//   console.log(res.a);
-//   return res.send(`${res.sum(3, 6)}`);
-// });
-
 app.use(
   session({
     resave: true,
@@ -75,25 +62,5 @@ app.use('/static', express.static(path.join(__dirname, '../public')));
  * Use routers
  */
 app.use('/', router);
-
-app.use((req, res, next) => {
-  next(createError(404));
-});
-
-// error handler
-app.use(function (err, req, res, next) {
-  res.locals.message = err.message;
-  res.locals.error = err;
-  res.status(err.status || 500);
-  res.json({
-    status: err.status || 500,
-    errors: [
-      {
-        title: err.name,
-        message: err.message,
-      },
-    ],
-  });
-});
 
 module.exports = app;
