@@ -1,43 +1,44 @@
 module.exports = (io) => {
-  io.on('connection', (socket) => {
-    console.log('connection');
-
-    socket.on('disconnect', () => {
-      console.log('연결 종료');
-      clearInterval(socket.interval);
+  /**
+   * [/videochat] Server Event
+   * @event "join-room": room 참여
+   * @event "notice": 공지
+   * @event "chat": 채팅 보내기
+   * @event "leave-room": room 떠나기
+   */
+  const vcNsc = io.of('/videochat');
+  vcNsc.on('connection', (socket) => {
+    vcNsc.on('notice', (notice) => {
+      vcNsc.emit('message', notice);
     });
-
-    socket.on('event1', (data) => {
-      console.log('event1', data);
-    });
-
-    socket.emit('add-li', 'message');
-    socket.interval = setInterval(() => {
-      socket.emit('add-li', 'Hello SOCKET.IO.js');
-    }, 3000);
-  });
-
-  const chatRoom = io.of('/CHATROOM');
-  chatRoom.on('connection', (socket) => {
-    socket.on('join-room', (roomId) => {
+    socket.on('join-room', (roomId, username, peerId) => {
       socket.join(roomId);
-      console.log(roomId);
-      socket.on('leave-room', (roomId) => {
+
+      vcNsc
+        .to(roomId)
+        .emit('message', username, `${username} 님이 입장하였습니다.`);
+
+      socket.on('chat', (msg) => {
+        vcNsc.to(roomId).emit('message', username, msg);
+      });
+
+      socket.on('leave-room', () => {
         socket.leave(roomId);
       });
-
-      socket.on('message', (msg) => {
-        console.log(msg);
-        socket.to(roomId).emit('message', `socket ${msg}`);
-        chatRoom.to(roomId).emit('message', `ns: ${msg}`);
-
-        // NameSpace vs socket의 차이:
-        // 메시지를 전송하는 주체가 관리자 level
-        // vs
-        // 소켓 level
-        chatRoom.emit('message');
-        // Room상관없이 이벤트를 발생
-      });
+    });
+    socket.on('disconnect', () => {
+      console.log('socket is disconnected');
     });
   });
+
+  // socket.on('message', (msg) => {
+  //   socket.to(roomId).emit('message', `socket ${msg}`);
+  //   chatRoom.to(roomId).emit('message', `ns: ${msg}`);
+  //   // NameSpace vs socket의 차이:
+  //   // 메시지를 전송하는 주체가 Namespace level
+  //   // chatRoom.to()...
+  //   // vs
+  //   // 소켓 level (socket.to()...)
+  //   // Room상관없이 이벤트를 발생
+  // });
 };
