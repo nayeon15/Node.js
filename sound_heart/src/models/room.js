@@ -8,8 +8,12 @@ const Room = new Schema({
     default: 2,
   },
   members: {
-    type: Schema.Types.Array(),
+    type: [Schema.Types.ObjectId],
     ref: mongoose.model('User'),
+  },
+  roomId: {
+    type: String,
+    required: true,
   },
 });
 
