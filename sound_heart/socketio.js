@@ -1,3 +1,6 @@
+const mongoose = require('mongoose');
+const Chat = mongoose.model('Chat');
+const Room = mongoose.model('Room');
 module.exports = (io) => {
   /**
    * [/videochat] Server Event
@@ -13,12 +16,23 @@ module.exports = (io) => {
     });
     socket.on('join-room', (roomId, username, peerId) => {
       socket.join(roomId);
+      let room;
+      Room.findOne({ roomId: roomId }).then((_room) => {
+        room = _room;
+        if (!_room) {
+          Room.create({ roomId: roomId }).then((_room) => {
+            room = _room;
+          });
+        }
+      });
+      socket.to(roomId).emit('user-connected', peerId);
 
       vcNsc
         .to(roomId)
         .emit('message', username, `${username} 님이 입장하였습니다.`);
 
       socket.on('chat', (msg) => {
+        Chat.create({ roomId: room._id, user: username, content: msg });
         vcNsc.to(roomId).emit('message', username, msg);
       });
 

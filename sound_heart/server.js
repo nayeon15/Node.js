@@ -10,11 +10,20 @@ dotenv.config({
       ? path.resolve(__dirname, '.env')
       : path.resolve(__dirname, '.development.env'),
 });
+/**
+ * Initialize express application
+ */
 
-const app = require('./src/app');
+const app = require('express')();
+
 const http = require('http');
 
 const server = http.createServer(app);
+
+/**
+ * socket middleware 작성
+ */
+// const authMiddleware = require('./src/middlewares/auth-middleware');
 
 const io = SocketIO(server, {
   cors: {
@@ -23,48 +32,30 @@ const io = SocketIO(server, {
   path: '/socket.io',
   transports: ['websocket', 'polling'],
 });
+io.use((socket, next) => {
+  /**
+   * socket.io middlewared
+   */
+  next();
+  //   // authMiddleware(socket.request, socket.request.res, next);
+});
+app.set('io', io);
+
+const configApp = require('./src/app');
+configApp(app);
 
 const Peer = require('peer');
 const peerServer = Peer.ExpressPeerServer(server, {
   path: '/videochat',
   debug: true,
 });
-app.use('/peerjs', peerServer);
-
-const errorHandler = require('./src/error_handler');
-errorHandler(app);
+// app.use('/peerjs', peerServer);
 
 const sock = require('./socketio');
 sock(io);
 
-// io.on('connection', (socket) => {
-//   const req = socket.request;
-//   const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-//   console.log('새로운 클라이언트'.ip, socket.id, req.id);
-
-//   socket.on('disconnect', () => {
-//     console.log('클라이언트 접속 해제', ip, socket.id);
-//     clearInterval(socket.interval);
-//   });
-//   socket.on('error', (err) => {
-//     console.error(err);
-//   });
-//   socket.on('reply', (data) => {
-//     console.log(data);
-//   });
-
-//   socket.interval = setInterval(() => {
-//     socket.emit('news', 'Hello Socket.IO');
-//   }, 3000);
-
-//   socket.on('join-room', (roomId, userId) => {
-//     socket.on('message', (message) => {
-//       // io. of
-//       console.log(message);
-//       io.to(roomId).emit('createMessage', message, userId);
-//     });
-//   });
-// });
+const errorHandler = require('./src/error_handler');
+errorHandler(app);
 
 connectDB(() => {
   server.listen(process.env.PORT || 3000, () => {
