@@ -41,7 +41,7 @@ module.exports = (app) => {
         collection: 'sound_of_heart_session',
       }),
     })
-  ); // TODO: Insert option
+  ); 
 
   // Passport 미들웨어 등록
   app.use(passport.initialize());
