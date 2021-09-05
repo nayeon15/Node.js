@@ -12,6 +12,7 @@ module.exports = {
   deleteComment,
   updateComment,
 };
+
 /**
  * prefix: /article
  * C.R.U.D
@@ -72,11 +73,7 @@ async function retrieveOneArticle(req, res, next) {
   }
 }
 
-/**
- *
- * @param {Object{title, content} req.body : 어떻게 바뀔건지?
- * @param {Object{articleId}} req.params : 어떤 걸 바꿀건지?
- */
+
 async function updateArticle(req, res, next) {
   const { articleId } = req.params;
   const { title, content } = req.body;
